@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/anthonydip/flutter-messenger-go/app/messenger-api/webserver"
+	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/webserver"
 
 	"github.com/rs/zerolog/log"
 )

@@ -3,9 +3,9 @@ package main
 import (
 	"net/http"
 
-	"github.com/anthonydip/flutter-messenger-go/app/messenger-api/middleware"
-	"github.com/anthonydip/flutter-messenger-go/app/messenger-api/routes/users"
-	"github.com/anthonydip/flutter-messenger-go/app/messenger-api/webserver"
+	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/middleware"
+	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/routes/users"
+	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/webserver"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
