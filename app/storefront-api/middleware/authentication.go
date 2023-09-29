@@ -16,7 +16,14 @@ func Authentication(srv webserver.Server) func(h http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			token := r.Header.Get("Authorization")
+
 			// Perform any authentication middleware
+			if !srv.ValidateJWT(token) {
+				w.WriteHeader(http.StatusUnauthorized)
+				w.Write([]byte("401 Unauthorized"))
+				return
+			}
 
 			next.ServeHTTP(w, r)
 		})

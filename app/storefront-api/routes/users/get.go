@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Get a user
 func Get(srv webserver.Server) http.HandlerFunc {
 	if srv == nil {
 		log.Fatal().Msg("a nil dependency was passed to GET '/users/{userID}'")
