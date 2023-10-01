@@ -17,4 +17,5 @@ func BuildPipeline(srv webserver.Server, r *mux.Router) {
 	r.Use(middleware.Authentication(srv))
 
 	r.HandleFunc("/users/{userID}", users.Get(srv)).Methods(http.MethodGet)
+	r.HandleFunc("/users", users.Post(srv)).Methods(http.MethodPost)
 }

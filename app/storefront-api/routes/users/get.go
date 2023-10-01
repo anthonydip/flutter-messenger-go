@@ -29,6 +29,6 @@ func Get(srv webserver.Server) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf("got user: %s", user.Name)))
+		w.Write([]byte(fmt.Sprintf("got user: %s", user.Email)))
 	}
 }
