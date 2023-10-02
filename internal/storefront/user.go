@@ -7,6 +7,7 @@ import (
 	"github.com/anthonydip/flutter-messenger-go/pkg/dtos"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/api/iterator"
 )
 
@@ -41,16 +42,24 @@ func (bkr Broker) PostUser(userInfo dtos.User) (dtos.User, error) {
 		return dtos.User{}, fmt.Errorf("409 Conflict")
 	}
 
+	// Hash the password
+	hash, err := bcrypt.GenerateFromPassword([]byte(userInfo.Password), 11)
+	if err != nil {
+		return dtos.User{}, fmt.Errorf("500 Internal Server Error")
+	}
+
 	// Generate a UUID for the new user
 	id := uuid.New().String()
 
 	user := dtos.User{
-		Id:    id,
-		Email: userInfo.Email,
+		Id:       id,
+		Email:    userInfo.Email,
+		Provider: userInfo.Provider,
+		Password: string(hash),
 	}
 
 	// Add the new user to the database
-	_, err := bkr.Firestore.Collection("users").Doc(id).Set(context.Background(), user)
+	_, err = bkr.Firestore.Collection("users").Doc(id).Set(context.Background(), user)
 	// Error creating user in the database
 	if err != nil {
 		return dtos.User{}, fmt.Errorf("500 Internal Server Error")

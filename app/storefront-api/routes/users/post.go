@@ -12,10 +12,10 @@ import (
 )
 
 type Response struct {
-	Status        string    `json:"status"`
-	StatusCode    int       `json:"statusCode"`
-	StatusMessage string    `json:"statusMessage,omitempty"`
-	User          dtos.User `json:"user,omitempty"`
+	Status        string     `json:"status"`
+	StatusCode    int        `json:"statusCode"`
+	StatusMessage string     `json:"statusMessage,omitempty"`
+	User          *dtos.User `json:"user,omitempty"`
 }
 
 // Create a user
@@ -122,7 +122,7 @@ func Post(srv webserver.Server) http.HandlerFunc {
 			Status:        "CREATED",
 			StatusCode:    201,
 			StatusMessage: "User successfully created",
-			User:          result,
+			User:          &result,
 		}
 
 		w.WriteHeader(http.StatusCreated)
