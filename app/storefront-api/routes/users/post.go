@@ -38,8 +38,11 @@ func Post(srv webserver.Server) http.HandlerFunc {
 
 		log.Info().Msgf("[POST /users] Received a request, %+v", user)
 
+		// Create sub-logger
+		sublogger := log.With().Any("request", user).Logger()
+
 		if err != nil {
-			log.Error().Msg("[POST /users] Invalid request body")
+			sublogger.Error().Msg("[POST /users] Invalid request body")
 
 			w.WriteHeader(http.StatusBadRequest)
 
@@ -64,16 +67,16 @@ func Post(srv webserver.Server) http.HandlerFunc {
 
 			switch err.Error() {
 			case "invalid email":
-				log.Error().Msgf("[POST /users] Invalid email, received %s", user.Email)
+				sublogger.Error().Msgf("[POST /users] Invalid email, received %s", user.Email)
 				res.StatusMessage = "Invalid email"
 			case "invalid provider":
-				log.Error().Msgf("[POST /users] Invalid provider, received %s", user.Provider)
+				sublogger.Error().Msgf("[POST /users] Invalid provider, received %s", user.Provider)
 				res.StatusMessage = "Invalid provider"
 			case "invalid password":
-				log.Error().Msg("[POST /users] Invalid password")
+				sublogger.Error().Msg("[POST /users] Invalid password")
 				res.StatusMessage = "Invalid password, criteria not met"
 			default:
-				log.Error().Msgf("[POST /users] Error occurred validating user request, %v", err)
+				sublogger.Error().Msgf("[POST /users] Error occurred validating user request, %v", err)
 				res = Response{
 					Status:        "INTERNAL SERVER ERROR",
 					StatusCode:    500,
@@ -92,7 +95,7 @@ func Post(srv webserver.Server) http.HandlerFunc {
 			res := Response{}
 
 			if err.Error() == "409 Conflict" {
-				log.Error().Msgf("[POST /users] User already exists with email: %s", user.Email)
+				sublogger.Error().Msgf("[POST /users] User already exists with email: %s", user.Email)
 
 				res = Response{
 					Status:        "CONFLICT",
@@ -103,7 +106,7 @@ func Post(srv webserver.Server) http.HandlerFunc {
 				w.WriteHeader(http.StatusConflict)
 				json.NewEncoder(w).Encode(&res)
 			} else {
-				log.Error().Msg("[POST /users] Posting new user failed")
+				sublogger.Error().Msgf("[POST /users] Posting new user failed, %v", err.Error())
 
 				res = Response{
 					Status:     "INTERNAL SERVER ERROR",
@@ -116,7 +119,7 @@ func Post(srv webserver.Server) http.HandlerFunc {
 			return
 		}
 
-		log.Info().Msgf("[POST /users] Successfully created user: %+v", result)
+		sublogger.Info().Msgf("[POST /users] Successfully created user: %+v", result)
 
 		res := Response{
 			Status:        "CREATED",

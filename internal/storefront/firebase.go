@@ -8,8 +8,14 @@ import (
 )
 
 func initializeFirebase(r *Broker) error {
+	// Get Firebase Project ID from environment variable
+	projectID, err := getEnv("FIREBASE_PROJECT_ID")
+	if err != nil {
+		return fmt.Errorf("error retrieving project id: %w", err)
+	}
+
 	// Initialize firebase app
-	conf := &firebase.Config{ProjectID: "***REMOVED***"}
+	conf := &firebase.Config{ProjectID: projectID}
 	app, err := firebase.NewApp(context.Background(), conf)
 	if err != nil {
 		return fmt.Errorf("error initializing firebase app: %w", err)

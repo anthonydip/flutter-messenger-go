@@ -36,7 +36,7 @@ func (bkr Broker) PostUser(userInfo dtos.User) (dtos.User, error) {
 		}
 		// Error querying database
 		if err != nil {
-			return dtos.User{}, fmt.Errorf("500 Internal Server Error")
+			return dtos.User{}, err
 		}
 
 		// Email already exists in the database
@@ -46,19 +46,19 @@ func (bkr Broker) PostUser(userInfo dtos.User) (dtos.User, error) {
 	// Get the salt rounds
 	env, err := getEnv("SALT_ROUNDS")
 	if err != nil {
-		return dtos.User{}, fmt.Errorf("500 Internal Server Error")
+		return dtos.User{}, err
 	}
 
 	// Convert salt rounds to a number
 	saltRounds, err := strconv.Atoi(env)
 	if err != nil {
-		return dtos.User{}, fmt.Errorf("500 Internal Server Error")
+		return dtos.User{}, err
 	}
 
 	// Hash the password
 	hash, err := bcrypt.GenerateFromPassword([]byte(userInfo.Password), saltRounds)
 	if err != nil {
-		return dtos.User{}, fmt.Errorf("500 Internal Server Error")
+		return dtos.User{}, err
 	}
 
 	// Generate a UUID for the new user
@@ -75,7 +75,7 @@ func (bkr Broker) PostUser(userInfo dtos.User) (dtos.User, error) {
 	_, err = bkr.Firestore.Collection("users").Doc(id).Set(context.Background(), user)
 	// Error creating user in the database
 	if err != nil {
-		return dtos.User{}, fmt.Errorf("500 Internal Server Error")
+		return dtos.User{}, err
 	}
 
 	return user, nil
