@@ -3,6 +3,7 @@ package storefront
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/anthonydip/flutter-messenger-go/pkg/dtos"
 
@@ -42,8 +43,20 @@ func (bkr Broker) PostUser(userInfo dtos.User) (dtos.User, error) {
 		return dtos.User{}, fmt.Errorf("409 Conflict")
 	}
 
+	// Get the salt rounds
+	env, err := getEnv("SALT_ROUNDS")
+	if err != nil {
+		return dtos.User{}, fmt.Errorf("500 Internal Server Error")
+	}
+
+	// Convert salt rounds to a number
+	saltRounds, err := strconv.Atoi(env)
+	if err != nil {
+		return dtos.User{}, fmt.Errorf("500 Internal Server Error")
+	}
+
 	// Hash the password
-	hash, err := bcrypt.GenerateFromPassword([]byte(userInfo.Password), 11)
+	hash, err := bcrypt.GenerateFromPassword([]byte(userInfo.Password), saltRounds)
 	if err != nil {
 		return dtos.User{}, fmt.Errorf("500 Internal Server Error")
 	}
