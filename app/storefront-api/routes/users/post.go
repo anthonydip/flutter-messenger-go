@@ -3,8 +3,8 @@ package users
 import (
 	"encoding/json"
 	"net/http"
-	"net/mail"
 
+	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/utils"
 	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/webserver"
 	"github.com/anthonydip/flutter-messenger-go/pkg/dtos"
 
@@ -25,8 +25,6 @@ func Post(srv webserver.Server) http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Info().Msg("[POST /users] Received a request")
-
 		w.Header().Set("Content-Type", "application/json")
 
 		user := dtos.User{}
@@ -38,31 +36,50 @@ func Post(srv webserver.Server) http.HandlerFunc {
 
 		err := dec.Decode(&user)
 
+		log.Info().Msgf("[POST /users] Received a request, %+v", user)
+
 		if err != nil {
 			log.Error().Msg("[POST /users] Invalid request body")
 
 			w.WriteHeader(http.StatusBadRequest)
 
 			res := Response{
-				Status:     "BAD REQUEST",
-				StatusCode: 400,
+				Status:        "BAD REQUEST",
+				StatusCode:    400,
+				StatusMessage: "Invalid request body",
 			}
 
 			json.NewEncoder(w).Encode(&res)
 			return
 		}
 
-		// Sanitization process
-		_, err = mail.ParseAddress(user.Email)
+		// Validate the user request
+		err = utils.ValidatePostUser(user)
 		if err != nil {
-			log.Error().Msg("[POST /users] Invalid email address")
-
+			res := Response{
+				Status:     "BAD REQUEST",
+				StatusCode: 400,
+			}
 			w.WriteHeader(http.StatusBadRequest)
 
-			res := Response{
-				Status:        "BAD REQUEST",
-				StatusCode:    400,
-				StatusMessage: "Invalid email address",
+			switch err.Error() {
+			case "invalid email":
+				log.Error().Msgf("[POST /users] Invalid email, received %s", user.Email)
+				res.StatusMessage = "Invalid email"
+			case "invalid provider":
+				log.Error().Msgf("[POST /users] Invalid provider, received %s", user.Provider)
+				res.StatusMessage = "Invalid provider"
+			case "invalid password":
+				log.Error().Msg("[POST /users] Invalid password")
+				res.StatusMessage = "Invalid password, criteria not met"
+			default:
+				log.Error().Msgf("[POST /users] Error occurred validating user request, %v", err)
+				res = Response{
+					Status:        "INTERNAL SERVER ERROR",
+					StatusCode:    500,
+					StatusMessage: "Error validating user request",
+				}
+				w.WriteHeader(http.StatusInternalServerError)
 			}
 
 			json.NewEncoder(w).Encode(&res)
