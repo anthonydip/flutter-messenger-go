@@ -65,4 +65,4 @@ $RECYCLE.BIN/
 *.lnk
 
 # Confidential
-/pkg/keys/*
+/keys/*

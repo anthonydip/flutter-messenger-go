@@ -8,6 +8,7 @@ import (
 	"github.com/anthonydip/flutter-messenger-go/pkg/dtos"
 
 	"github.com/google/uuid"
+	"github.com/mitchellh/mapstructure"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/api/iterator"
 )
@@ -24,6 +25,34 @@ func (bkr Broker) GetUser(id string) (dtos.User, error) {
 	return dtos.User{
 		Email: "test@gmail.com",
 	}, nil
+}
+
+func (bkr Broker) GetUserByEmail(email string) (dtos.User, error) {
+	user := dtos.User{}
+
+	iter := bkr.Firestore.Collection("users").Where("email", "==", email).Limit(1).Documents(context.Background())
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+
+		if err != nil {
+			return dtos.User{}, err
+		}
+
+		// User exists in the database
+		if doc.Data() != nil {
+			mapstructure.Decode(doc.Data(), &user)
+		}
+	}
+
+	// User does not exist
+	if (dtos.User{}) == user {
+		return dtos.User{}, fmt.Errorf("user does not exist")
+	}
+
+	return user, nil
 }
 
 func (bkr Broker) PostUser(userInfo dtos.User) (dtos.User, error) {
