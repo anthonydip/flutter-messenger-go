@@ -11,6 +11,7 @@ import (
 // Storefront exposes all functionalities of the Storefront service.
 type Storefront interface {
 	GetUser(string) (dtos.User, error)
+	GetUserByEmail(string) (dtos.User, error)
 	PostUser(dtos.User) (dtos.User, error)
 }
 

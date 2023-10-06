@@ -35,6 +35,20 @@ func Post(srv webserver.Server) http.HandlerFunc {
 		dec.DisallowUnknownFields()
 
 		err := dec.Decode(&user)
+		if err != nil {
+			log.Error().Msg("[POST /users] Unable to decode user")
+
+			w.WriteHeader(http.StatusBadRequest)
+
+			res := Response{
+				Status:        "BAD REQUEST",
+				StatusCode:    400,
+				StatusMessage: "Invalid request body",
+			}
+
+			json.NewEncoder(w).Encode(&res)
+			return
+		}
 
 		log.Info().Msgf("[POST /users] Received a request, %+v", user)
 
