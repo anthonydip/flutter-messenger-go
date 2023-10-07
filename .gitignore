@@ -65,5 +65,9 @@ $RECYCLE.BIN/
 *.lnk
 
 # Confidential
+<<<<<<< HEAD
 /keys/*
 .env
+=======
+/keys/*
+>>>>>>> 4d61354d1188a2e055ab8e0881bfe45a32b2186d
