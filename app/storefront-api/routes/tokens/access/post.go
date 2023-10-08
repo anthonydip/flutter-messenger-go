@@ -98,6 +98,8 @@ func Post(srv webserver.Server) http.HandlerFunc {
 			Token:         token,
 		}
 
+		log.Info().Msgf("[POST /tokens/access] Successfully generated user access token, %s", token)
+
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(&res)
 	}
