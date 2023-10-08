@@ -14,6 +14,7 @@ require (
 	github.com/caitlin615/nist-password-validator v0.0.0-20190321104149-45ab5d3140de // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect

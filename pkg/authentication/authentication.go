@@ -6,18 +6,22 @@ import (
 	"time"
 
 	"github.com/anthonydip/flutter-messenger-go/pkg/dtos"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/rs/zerolog/log"
 )
 
-type UserInfo struct {
-	Email    string
-	Provider string
-}
+const (
+	privAccessKeyPath   = "../../keys/rsa-access-key.private"
+	pubAccessKeyPath    = "../../keys/rsa-access-key.public"
+	privInternalKeyPath = "../../keys/rsa-internal-key.private"
+	pubInternalKeyPath  = "../../keys/rsa-internal-key.public"
+)
 
 type JwtClaims struct {
-	*jwt.StandardClaims
+	jwt.RegisteredClaims
 	TokenType string
-	UserInfo
+	Email     string
+	Provider  string
 }
 
 // Auth exposes all functionalities of the Auth agent
@@ -37,40 +41,40 @@ func New(cfg Config) (Authentication, error) {
 
 // Generate a new access token for a user
 func (bkr *Broker) GenerateAccessToken(user dtos.User) (string, error) {
-	signBytes, err := os.ReadFile("../../keys/rsa-access-key.private")
+	// Read the private PEM key for the user access token
+	signBytes, err := os.ReadFile(privAccessKeyPath)
 	if err != nil {
+		log.Fatal().Err(err).Str("function", "GenerateAccessToken").Msg("Error reading private PEM key")
 		return "", fmt.Errorf("error reading file")
 	}
 
+	// Parse RSA from the private key
 	signKey, err := jwt.ParseRSAPrivateKeyFromPEM(signBytes)
 	if err != nil {
+		log.Fatal().Err(err).Str("function", "GenerateAccessToken").Msg("Error parsing private PEM key")
 		return "", fmt.Errorf("error parsing pem")
 	}
 
-	// Create a signer for RSA 256
-	t := jwt.New(jwt.GetSigningMethod("RS256"))
-
-	// Set claims
-	t.Claims = &JwtClaims{
-		&jwt.StandardClaims{
-			// Set the expire time
-			// see http://tools.ietf.org/html/draft-ietf-oauth-json-web-token-20#section-4.1.4
-			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
+	// Create claims with a 1 minute expire time
+	claims := JwtClaims{
+		jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Minute)),
 		},
 		"user",
-		UserInfo{
-			Email:    user.Email,
-			Provider: user.Provider,
-		},
+		user.Email,
+		user.Provider,
 	}
 
-	// Create token string
-	token, err := t.SignedString(signKey)
+	// Create new token with claims and sign
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	ss, err := token.SignedString(signKey)
 	if err != nil {
+		log.Fatal().Err(err).Str("function", "GenerateAccessToken").Msg("Error signing token")
 		return "", fmt.Errorf("error signing token")
 	}
 
-	return token, nil
+	return ss, nil
 }
 
 // ValidateJWT validates the user JWT token
@@ -80,7 +84,26 @@ func (bkr *Broker) ValidateJWT(token string) bool {
 }
 
 // ValidateInternalJWT validates the internal JWT token
-func (bkr *Broker) ValidateInternalJWT(token string) bool {
+func (bkr *Broker) ValidateInternalJWT(tokenString string) bool {
+	// Read the public PEM key for the internal access token
+	verifyBytes, err := os.ReadFile(pubInternalKeyPath)
+	if err != nil {
+		log.Fatal().Err(err).Str("function", "ValidateInternalJWT").Msg("Error reading public PEM key")
+		return false
+	}
 
-	return true
+	// Parse RSA from the public key
+	verifyKey, err := jwt.ParseRSAPublicKeyFromPEM(verifyBytes)
+	if err != nil {
+		log.Fatal().Err(err).Str("function", "ValidateInternalJWT").Msg("Error parsing public PEM key")
+		return false
+	}
+
+	// Verify the provided token string
+	_, err = jwt.ParseWithClaims(tokenString, &JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return verifyKey, nil
+	})
+
+	// If the token is missing or invalid, return false
+	return err == nil
 }

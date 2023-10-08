@@ -2,7 +2,6 @@ package access
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/webserver"
@@ -92,9 +91,14 @@ func Post(srv webserver.Server) http.HandlerFunc {
 			return
 		}
 
-		fmt.Printf("token: %s\n", token)
+		res := Response{
+			Status:        "CREATED",
+			StatusCode:    201,
+			StatusMessage: "Successfully generated access token",
+			Token:         token,
+		}
 
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf("got user: %s", user.Email)))
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(&res)
 	}
 }

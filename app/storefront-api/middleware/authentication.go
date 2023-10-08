@@ -1,13 +1,21 @@
 package middleware
 
 import (
+	"encoding/json"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/webserver"
 
 	"github.com/rs/zerolog/log"
 )
+
+type Response struct {
+	Status        string `json:"status"`
+	StatusCode    int    `json:"statusCode"`
+	StatusMessage string `json:"statusMessage,omitempty"`
+}
 
 type route struct {
 	Regex  string
@@ -28,10 +36,13 @@ func Authentication(srv webserver.Server) func(h http.Handler) http.Handler {
 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			token := r.Header.Get("Authorization")
+			w.Header().Set("Content-Type", "application/json")
 
-			isInternalRoute := false
+			token := r.Header.Get("Authorization")
+			tokenString := strings.ReplaceAll(token, "Bearer ", "")
+
 			// Check if the request URL requires an internal token
+			isInternalRoute := false
 			for _, route := range internalRoutes {
 				match, _ := regexp.MatchString(route.Regex, r.URL.String())
 				if match {
@@ -39,17 +50,23 @@ func Authentication(srv webserver.Server) func(h http.Handler) http.Handler {
 				}
 			}
 
+			res := Response{
+				Status:        "UNAUTHORIZED",
+				StatusCode:    401,
+				StatusMessage: "Invalid authorization token",
+			}
+
 			// Perform authentication middleware depending on the route
 			if isInternalRoute {
-				if !srv.ValidateInternalJWT(token) {
+				if !srv.ValidateInternalJWT(tokenString) {
 					w.WriteHeader(http.StatusUnauthorized)
-					w.Write([]byte("401 Unauthorized"))
+					json.NewEncoder(w).Encode(&res)
 					return
 				}
 			} else {
-				if !srv.ValidateJWT(token) {
+				if !srv.ValidateJWT(tokenString) {
 					w.WriteHeader(http.StatusUnauthorized)
-					w.Write([]byte("401 Unauthorized"))
+					json.NewEncoder(w).Encode(&res)
 					return
 				}
 			}
