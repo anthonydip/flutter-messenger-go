@@ -50,7 +50,7 @@ func Post(srv webserver.Server) http.HandlerFunc {
 			return
 		}
 
-		log.Info().Msgf("[POST /users] Received a request, %+v", user)
+		log.Info().Msgf("[POST /users] Received a request: %+v", user)
 
 		// Create sub-logger
 		sublogger := log.With().Any("request", user).Logger()

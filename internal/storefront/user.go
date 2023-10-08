@@ -14,17 +14,16 @@ import (
 )
 
 func (bkr Broker) GetUser(id string) (dtos.User, error) {
+	user := dtos.User{}
+
 	dsnap, err := bkr.Firestore.Collection("users").Doc(id).Get(context.Background())
 	if err != nil {
-		fmt.Printf("An error has occurred: %s\n", err)
+		return dtos.User{}, fmt.Errorf("user not found")
 	}
 
-	m := dsnap.Data()
-	fmt.Printf("document data: %#v\n", m)
+	mapstructure.Decode(dsnap.Data(), &user)
 
-	return dtos.User{
-		Email: "test@gmail.com",
-	}, nil
+	return user, nil
 }
 
 func (bkr Broker) GetUserByEmail(email string) (dtos.User, error) {
