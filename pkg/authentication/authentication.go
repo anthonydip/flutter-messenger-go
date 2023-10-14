@@ -78,9 +78,27 @@ func (bkr *Broker) GenerateAccessToken(user dtos.User) (string, error) {
 }
 
 // ValidateJWT validates the user JWT token
-func (bkr *Broker) ValidateJWT(token string) bool {
-	// Do JWT validation stuff here
-	return true
+func (bkr *Broker) ValidateJWT(tokenString string) bool {
+	// Read the public PEM key for the user access token
+	verifyBytes, err := os.ReadFile(pubAccessKeyPath)
+	if err != nil {
+		log.Fatal().Err(err).Str("function", "ValidateJWT").Msg("Error reading public PEM key")
+		return false
+	}
+
+	// Parse RSA from the public key
+	verifyKey, err := jwt.ParseRSAPublicKeyFromPEM(verifyBytes)
+	if err != nil {
+		log.Fatal().Err(err).Str("function", "ValidateJWT").Msg("Error parsing public PEM key")
+	}
+
+	// Verify the provided token string
+	_, err = jwt.ParseWithClaims(tokenString, &JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return verifyKey, nil
+	})
+
+	// If the token is missing or invalid, return false
+	return err == nil
 }
 
 // ValidateInternalJWT validates the internal JWT token
