@@ -120,7 +120,7 @@ func Post(srv webserver.Server) http.HandlerFunc {
 				w.WriteHeader(http.StatusConflict)
 				json.NewEncoder(w).Encode(&res)
 			} else {
-				sublogger.Error().Msgf("[POST /users] Posting new user failed, %v", err.Error())
+				sublogger.Error().Msgf("[POST /users] Posting new user failed: %v", err.Error())
 
 				res = Response{
 					Status:     "INTERNAL SERVER ERROR",
