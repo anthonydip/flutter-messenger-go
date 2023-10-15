@@ -16,7 +16,7 @@ type Response struct {
 	Token         string `json:"token,omitempty"`
 }
 
-// Retrieve a user access token
+// Create a user access token
 func Post(srv webserver.Server) http.HandlerFunc {
 	if srv == nil {
 		log.Fatal().Msg("a nil dependency was passed to GET '/tokens/access'")
@@ -90,6 +90,23 @@ func Post(srv webserver.Server) http.HandlerFunc {
 			json.NewEncoder(w).Encode(&res)
 			return
 		}
+
+		// Add the access token to the database
+		err = srv.AddAccessToken(token, user)
+		if err != nil {
+			log.Error().Msg("[POST /tokens/access] Error adding access token to the database")
+
+			res := Response{
+				Status:        "INTERNAL SERVER ERROR",
+				StatusCode:    500,
+				StatusMessage: "Error generating access token",
+			}
+
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(&res)
+			return
+		}
+		log.Info().Msgf("[POST /tokens/access] Successfully added access token to the database, %s", token)
 
 		res := Response{
 			Status:        "CREATED",

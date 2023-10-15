@@ -13,6 +13,7 @@ type Storefront interface {
 	GetUser(string) (dtos.User, error)
 	GetUserByEmail(string) (dtos.User, error)
 	PostUser(dtos.User) (dtos.User, error)
+	AddAccessToken(string, dtos.User) error
 }
 
 // Broker manages the internal state of the Storefront service.

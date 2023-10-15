@@ -28,6 +28,7 @@ type JwtClaims struct {
 type Authentication interface {
 	GenerateAccessToken(user dtos.User) (string, error)
 	ValidateJWT(token string) bool
+	ValidateParseJWT(token string) (dtos.User, bool)
 	ValidateInternalJWT(token string) bool
 }
 
@@ -59,7 +60,7 @@ func (bkr *Broker) GenerateAccessToken(user dtos.User) (string, error) {
 	claims := JwtClaims{
 		jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 		},
 		"user",
 		user.Email,
@@ -90,6 +91,7 @@ func (bkr *Broker) ValidateJWT(tokenString string) bool {
 	verifyKey, err := jwt.ParseRSAPublicKeyFromPEM(verifyBytes)
 	if err != nil {
 		log.Fatal().Err(err).Str("function", "ValidateJWT").Msg("Error parsing public PEM key")
+		return false
 	}
 
 	// Verify the provided token string
@@ -99,6 +101,36 @@ func (bkr *Broker) ValidateJWT(tokenString string) bool {
 
 	// If the token is missing or invalid, return false
 	return err == nil
+}
+
+// Function to validate user JWT token and return the associated user information
+func (bkr *Broker) ValidateParseJWT(tokenString string) (dtos.User, bool) {
+	// Read the public PEM key for the user access token
+	verifyBytes, err := os.ReadFile(pubAccessKeyPath)
+	if err != nil {
+		log.Fatal().Err(err).Str("function", "ValidateJWT").Msg("Error reading public PEM key")
+		return dtos.User{}, false
+	}
+
+	// Parse RSA from the public key
+	verifyKey, err := jwt.ParseRSAPublicKeyFromPEM(verifyBytes)
+	if err != nil {
+		log.Fatal().Err(err).Str("function", "ValidateJWT").Msg("Error parsing public PEM key")
+		return dtos.User{}, false
+	}
+
+	// Verify the provided token string
+	token, err := jwt.ParseWithClaims(tokenString, &JwtClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return verifyKey, nil
+	})
+
+	if claims, ok := token.Claims.(*JwtClaims); ok && token.Valid {
+		fmt.Printf("%+v", claims)
+		return dtos.User{}, true
+	} else {
+		fmt.Println(err)
+		return dtos.User{}, false
+	}
 }
 
 // ValidateInternalJWT validates the internal JWT token
