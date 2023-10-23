@@ -90,15 +90,15 @@ func Post(srv webserver.Server) http.HandlerFunc {
 		err = srv.SignIn(user)
 		if err != nil {
 			res := Response{
-				Status:     "BAD REQUEST",
-				StatusCode: 400,
+				Status:     "UNAUTHORIZED",
+				StatusCode: 401,
 			}
 			w.WriteHeader(http.StatusBadRequest)
 
 			switch err.Error() {
 			case "invalid password":
 				sublogger.Error().Msg("[POST /auth/signin] Password does not match hash")
-				res.StatusMessage = "Invalid password"
+				res.StatusMessage = "Incorrect password"
 			default:
 				sublogger.Error().Msgf("[POST /auth/signin] Error occurred signing user in, %v", err)
 				res = Response{
