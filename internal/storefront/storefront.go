@@ -12,6 +12,7 @@ import (
 type Storefront interface {
 	GetUser(string) (dtos.User, error)
 	GetUserByEmail(string) (dtos.User, error)
+	SignIn(dtos.User) error
 	PostUser(dtos.User) (dtos.User, error)
 	AddAccessToken(string, dtos.User) error
 }

@@ -21,11 +21,13 @@ func ValidatePostUser(user dtos.User) error {
 		return fmt.Errorf("invalid provider")
 	}
 
-	// Validate the password
-	validator := password.NewValidator(true, 8, 64)
-	err = validator.ValidatePassword(user.Password)
-	if err != nil {
-		return fmt.Errorf("invalid password")
+	// Validate the password if it is not through Google
+	if user.Provider == "Flutter" {
+		validator := password.NewValidator(true, 8, 64)
+		err = validator.ValidatePassword(user.Password)
+		if err != nil {
+			return fmt.Errorf("invalid password")
+		}
 	}
 
 	return nil

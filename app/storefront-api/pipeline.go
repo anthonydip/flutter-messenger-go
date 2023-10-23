@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/middleware"
+	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/routes/auth/signin"
 	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/routes/tokens/access"
 	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/routes/users"
 	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/webserver"
@@ -16,6 +17,8 @@ func BuildPipeline(srv webserver.Server, r *mux.Router) {
 	log.Info().Msg("building pipeline...")
 
 	r.Use(middleware.Authentication(srv))
+
+	r.HandleFunc("/auth/signin", signin.Post(srv)).Methods(http.MethodPost)
 
 	r.HandleFunc("/tokens/access", access.Post(srv)).Methods(http.MethodPost)
 
