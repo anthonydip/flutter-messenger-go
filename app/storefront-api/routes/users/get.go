@@ -94,7 +94,7 @@ func Get(srv webserver.Server) http.HandlerFunc {
 			res := Response{
 				Status:        "SUCCESS",
 				StatusCode:    200,
-				StatusMessage: "User exists",
+				StatusMessage: "User found",
 				User:          &user,
 			}
 			w.WriteHeader(http.StatusOK)
