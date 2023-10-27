@@ -1,4 +1,4 @@
-package access
+package accessToken
 
 import (
 	"encoding/json"

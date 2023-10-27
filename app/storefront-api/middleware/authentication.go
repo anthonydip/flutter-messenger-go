@@ -24,7 +24,7 @@ type route struct {
 
 var internalRoutes = [...]route{
 	{Regex: "^/auth/signin$", Method: http.MethodPost},
-	{Regex: "^/tokens/access$", Method: http.MethodGet},
+	{Regex: "^/auth/tokens/access$", Method: http.MethodGet},
 	{Regex: "^/users$", Method: http.MethodPost},
 	{Regex: "^/users/", Method: http.MethodGet},
 }
