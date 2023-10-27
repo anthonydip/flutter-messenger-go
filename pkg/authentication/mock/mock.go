@@ -7,6 +7,7 @@ import (
 type Result func(c *mockConfig)
 
 type mockConfig struct {
+	validateJWTShouldFail bool
 }
 
 // Mock the Authorization agent
@@ -32,7 +33,13 @@ func (m Mock) GenerateAccessToken(dtos.User) (string, error) {
 }
 
 func (m Mock) ValidateJWT(string) bool {
-	return true
+	return !m.cfg.validateJWTShouldFail
+}
+
+func ValidateJWTFail() Result {
+	return func(c *mockConfig) {
+		c.validateJWTShouldFail = true
+	}
 }
 
 func (m Mock) ValidateParseJWT(string) (dtos.User, bool) {
