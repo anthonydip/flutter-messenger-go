@@ -5,7 +5,7 @@ import (
 	"github.com/anthonydip/flutter-messenger-go/pkg/authentication"
 
 	mockstore "github.com/anthonydip/flutter-messenger-go/internal/storefront/mock"
-	// mockauth 	"github.com/anthonydip/flutter-messenger-go/pkg/authentication/mock"
+	mockauth "github.com/anthonydip/flutter-messenger-go/pkg/authentication/mock"
 )
 
 type Result func(c *mockConfig)
@@ -24,8 +24,8 @@ type Mock struct {
 // Function to create a new Mock webserver
 func New(opts ...Result) Mock {
 	r := Mock{
-		// Authentication: mockauth.New(),
-		Storefront: mockstore.New(),
+		Authentication: mockauth.New(),
+		Storefront:     mockstore.New(),
 	}
 
 	for _, o := range opts {
@@ -35,6 +35,13 @@ func New(opts ...Result) Mock {
 	}
 
 	return r
+}
+
+// WithAuthentication attaches a customized authentication mock
+func (m Mock) WithAuthentication(opts ...mockauth.Result) Mock {
+	m.Authentication = mockauth.New(opts...)
+
+	return m
 }
 
 // WithStorefront attaches a customized storefront mock

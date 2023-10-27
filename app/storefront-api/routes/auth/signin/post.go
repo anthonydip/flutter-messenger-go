@@ -93,12 +93,20 @@ func Post(srv webserver.Server) http.HandlerFunc {
 				Status:     "UNAUTHORIZED",
 				StatusCode: 401,
 			}
-			w.WriteHeader(http.StatusBadRequest)
 
 			switch err.Error() {
+			case "user does not exist":
+				sublogger.Error().Msg("[POST /auth/signin] User does not exist")
+				res = Response{
+					Status:        "NOT FOUND",
+					StatusCode:    404,
+					StatusMessage: "User does not exist",
+				}
+				w.WriteHeader(http.StatusNotFound)
 			case "invalid password":
 				sublogger.Error().Msg("[POST /auth/signin] Password does not match hash")
 				res.StatusMessage = "Incorrect password"
+				w.WriteHeader(http.StatusUnauthorized)
 			default:
 				sublogger.Error().Msgf("[POST /auth/signin] Error occurred signing user in, %v", err)
 				res = Response{

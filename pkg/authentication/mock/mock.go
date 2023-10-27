@@ -1,5 +1,9 @@
 package mock
 
+import (
+	"github.com/anthonydip/flutter-messenger-go/pkg/dtos"
+)
+
 type Result func(c *mockConfig)
 
 type mockConfig struct {
@@ -21,4 +25,20 @@ func New(opts ...Result) *Mock {
 	}
 
 	return r
+}
+
+func (m Mock) GenerateAccessToken(dtos.User) (string, error) {
+	return "some-access-token", nil
+}
+
+func (m Mock) ValidateJWT(string) bool {
+	return true
+}
+
+func (m Mock) ValidateParseJWT(string) (dtos.User, bool) {
+	return dtos.User{}, true
+}
+
+func (m Mock) ValidateInternalJWT(string) bool {
+	return true
 }
