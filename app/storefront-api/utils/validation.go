@@ -8,6 +8,16 @@ import (
 	"github.com/caitlin615/nist-password-validator/password"
 )
 
+// Function to validate an email
+func ValidateEmail(email string) error {
+	_, err := mail.ParseAddress(email)
+	if err != nil {
+		return fmt.Errorf("invalid email")
+	}
+
+	return nil
+}
+
 // Function to validate the fields from a create user request
 func ValidatePostUser(user dtos.User) error {
 	// Validate the email address

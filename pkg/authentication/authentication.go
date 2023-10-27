@@ -20,6 +20,7 @@ const (
 type JwtClaims struct {
 	jwt.RegisteredClaims
 	TokenType string
+	UserID    string
 	Email     string
 	Provider  string
 }
@@ -28,7 +29,7 @@ type JwtClaims struct {
 type Authentication interface {
 	GenerateAccessToken(user dtos.User) (string, error)
 	ValidateJWT(token string) bool
-	ValidateParseJWT(token string) (dtos.User, bool)
+	ValidateParseJWT(token string) (dtos.User, error)
 	ValidateInternalJWT(token string) bool
 }
 
@@ -63,6 +64,7 @@ func (bkr *Broker) GenerateAccessToken(user dtos.User) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 		},
 		"user",
+		user.Id,
 		user.Email,
 		user.Provider,
 	}
@@ -104,19 +106,19 @@ func (bkr *Broker) ValidateJWT(tokenString string) bool {
 }
 
 // Function to validate user JWT token and return the associated user information
-func (bkr *Broker) ValidateParseJWT(tokenString string) (dtos.User, bool) {
+func (bkr *Broker) ValidateParseJWT(tokenString string) (dtos.User, error) {
 	// Read the public PEM key for the user access token
 	verifyBytes, err := os.ReadFile(pubAccessKeyPath)
 	if err != nil {
 		log.Fatal().Err(err).Str("function", "ValidateJWT").Msg("Error reading public PEM key")
-		return dtos.User{}, false
+		return dtos.User{}, fmt.Errorf("error reading pem")
 	}
 
 	// Parse RSA from the public key
 	verifyKey, err := jwt.ParseRSAPublicKeyFromPEM(verifyBytes)
 	if err != nil {
 		log.Fatal().Err(err).Str("function", "ValidateJWT").Msg("Error parsing public PEM key")
-		return dtos.User{}, false
+		return dtos.User{}, fmt.Errorf("error parsing pem")
 	}
 
 	// Verify the provided token string
@@ -125,11 +127,14 @@ func (bkr *Broker) ValidateParseJWT(tokenString string) (dtos.User, bool) {
 	})
 
 	if claims, ok := token.Claims.(*JwtClaims); ok && token.Valid {
-		fmt.Printf("%+v", claims)
-		return dtos.User{}, true
+		fmt.Printf("claims: %+v", claims)
+		return dtos.User{
+			Id:       claims.UserID,
+			Email:    claims.Email,
+			Provider: claims.Provider,
+		}, nil
 	} else {
-		fmt.Println(err)
-		return dtos.User{}, false
+		return dtos.User{}, fmt.Errorf("invalid token")
 	}
 }
 

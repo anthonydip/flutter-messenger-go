@@ -11,6 +11,7 @@ import (
 
 type TokenInfo struct {
 	TokenType string
+	Id        string
 	Email     string
 	Provider  string
 }
@@ -42,6 +43,7 @@ func (bkr Broker) DeleteAccessToken(token string) error {
 func (bkr Broker) AddAccessToken(token string, user dtos.User) error {
 	info := TokenInfo{
 		"user",
+		user.Id,
 		user.Email,
 		user.Provider,
 	}

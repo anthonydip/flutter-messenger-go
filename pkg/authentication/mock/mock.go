@@ -42,8 +42,8 @@ func ValidateJWTFail() Result {
 	}
 }
 
-func (m Mock) ValidateParseJWT(string) (dtos.User, bool) {
-	return dtos.User{}, true
+func (m Mock) ValidateParseJWT(string) (dtos.User, error) {
+	return dtos.User{}, nil
 }
 
 func (m Mock) ValidateInternalJWT(string) bool {

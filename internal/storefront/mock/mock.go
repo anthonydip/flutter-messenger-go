@@ -148,3 +148,8 @@ func DeleteAccessTokenResult(e error) Result {
 func (m Mock) AccessTokenExists(string) error {
 	return nil
 }
+
+// TODO
+func (m Mock) PostFriend(string, dtos.User) error {
+	return nil
+}

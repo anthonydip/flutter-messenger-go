@@ -28,6 +28,8 @@ func (bkr Broker) GetUser(id string) (dtos.User, error) {
 
 	mapstructure.Decode(dsnap.Data(), &user)
 
+	user.Password = ""
+
 	return user, nil
 }
 
@@ -55,6 +57,8 @@ func (bkr Broker) GetUserByEmail(email string) (dtos.User, error) {
 	if (dtos.User{}) == user {
 		return dtos.User{}, fmt.Errorf("user does not exist")
 	}
+
+	user.Password = ""
 
 	return user, nil
 }
@@ -162,4 +166,13 @@ func (bkr Broker) PostUser(userInfo dtos.User) (dtos.User, error) {
 	}
 
 	return user, nil
+}
+
+func (bkr Broker) PostFriend(userID string, friend dtos.User) error {
+	_, err := bkr.Firestore.Collection("users").Doc(userID).Collection("friends").Doc(friend.Id).Set(context.Background(), friend)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

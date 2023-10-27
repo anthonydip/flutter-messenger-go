@@ -14,6 +14,7 @@ type Storefront interface {
 	GetUserByEmail(string) (dtos.User, error)
 	SignIn(dtos.User) error
 	PostUser(dtos.User) (dtos.User, error)
+	PostFriend(string, dtos.User) error
 	DeleteAccessToken(string) error
 	AccessTokenExists(string) error
 	AddAccessToken(string, dtos.User) error

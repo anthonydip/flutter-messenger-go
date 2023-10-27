@@ -55,21 +55,6 @@ func Post(srv webserver.Server) http.HandlerFunc {
 		// Create sub-logger
 		sublogger := log.With().Any("request", user).Logger()
 
-		if err != nil {
-			sublogger.Error().Msg("[POST /users] Invalid request body")
-
-			w.WriteHeader(http.StatusBadRequest)
-
-			res := Response{
-				Status:        "BAD REQUEST",
-				StatusCode:    400,
-				StatusMessage: "Invalid request body",
-			}
-
-			json.NewEncoder(w).Encode(&res)
-			return
-		}
-
 		// Validate the user request
 		err = utils.ValidatePostUser(user)
 		if err != nil {

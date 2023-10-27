@@ -27,7 +27,7 @@ var internalRoutes = [...]route{
 	{Regex: "^/auth/tokens/access$", Method: http.MethodPost},
 	{Regex: "^/auth/tokens/access/", Method: http.MethodDelete},
 	{Regex: "^/users$", Method: http.MethodPost},
-	{Regex: "^/users/", Method: http.MethodGet},
+	{Regex: "^/users/[^/]+$", Method: http.MethodGet},
 }
 
 // Authentication middleware
@@ -47,7 +47,8 @@ func Authentication(srv webserver.Server) func(h http.Handler) http.Handler {
 			isInternalRoute := false
 			for _, route := range internalRoutes {
 				match, _ := regexp.MatchString(route.Regex, r.URL.String())
-				if match {
+				matchMethod := r.Method == route.Method
+				if match && matchMethod {
 					isInternalRoute = true
 				}
 			}
