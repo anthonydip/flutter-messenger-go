@@ -174,6 +174,8 @@ func Post(srv webserver.Server) http.HandlerFunc {
 			return
 		}
 
+		sublogger.Info().Msgf("[POST /users/friends] Successfully added friend")
+
 		res := FriendResponse{
 			Status:        "SUCCESS",
 			StatusCode:    200,

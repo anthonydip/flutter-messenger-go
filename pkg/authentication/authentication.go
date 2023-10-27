@@ -110,14 +110,12 @@ func (bkr *Broker) ValidateParseJWT(tokenString string) (dtos.User, error) {
 	// Read the public PEM key for the user access token
 	verifyBytes, err := os.ReadFile(pubAccessKeyPath)
 	if err != nil {
-		log.Fatal().Err(err).Str("function", "ValidateJWT").Msg("Error reading public PEM key")
 		return dtos.User{}, fmt.Errorf("error reading pem")
 	}
 
 	// Parse RSA from the public key
 	verifyKey, err := jwt.ParseRSAPublicKeyFromPEM(verifyBytes)
 	if err != nil {
-		log.Fatal().Err(err).Str("function", "ValidateJWT").Msg("Error parsing public PEM key")
 		return dtos.User{}, fmt.Errorf("error parsing pem")
 	}
 
@@ -127,7 +125,6 @@ func (bkr *Broker) ValidateParseJWT(tokenString string) (dtos.User, error) {
 	})
 
 	if claims, ok := token.Claims.(*JwtClaims); ok && token.Valid {
-		fmt.Printf("claims: %+v", claims)
 		return dtos.User{
 			Id:       claims.UserID,
 			Email:    claims.Email,
