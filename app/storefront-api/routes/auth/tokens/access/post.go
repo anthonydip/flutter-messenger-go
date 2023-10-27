@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type Response struct {
+type TokenResponse struct {
 	Status        string `json:"status"`
 	StatusCode    int    `json:"statusCode"`
 	StatusMessage string `json:"statusMessage,omitempty"`
@@ -38,7 +38,7 @@ func Post(srv webserver.Server) http.HandlerFunc {
 
 			w.WriteHeader(http.StatusBadRequest)
 
-			res := Response{
+			res := TokenResponse{
 				Status:        "BAD REQUEST",
 				StatusCode:    400,
 				StatusMessage: "Invalid request body",
@@ -55,7 +55,7 @@ func Post(srv webserver.Server) http.HandlerFunc {
 		if err != nil {
 			log.Info().Msgf("[POST /tokens/access] Specified user does not exist")
 
-			res := Response{
+			res := TokenResponse{
 				Status:        "NOT FOUND",
 				StatusCode:    404,
 				StatusMessage: "User does not exist",
@@ -80,7 +80,7 @@ func Post(srv webserver.Server) http.HandlerFunc {
 				log.Error().Msg("[POST /tokens/access] Unexpected error occurred generating user access token")
 			}
 
-			res := Response{
+			res := TokenResponse{
 				Status:        "INTERNAL SERVER ERROR",
 				StatusCode:    500,
 				StatusMessage: "Error generating access token",
@@ -96,7 +96,7 @@ func Post(srv webserver.Server) http.HandlerFunc {
 		if err != nil {
 			log.Error().Msg("[POST /tokens/access] Error adding access token to the database")
 
-			res := Response{
+			res := TokenResponse{
 				Status:        "INTERNAL SERVER ERROR",
 				StatusCode:    500,
 				StatusMessage: "Error generating access token",
@@ -108,7 +108,7 @@ func Post(srv webserver.Server) http.HandlerFunc {
 		}
 		log.Info().Msgf("[POST /tokens/access] Successfully added access token to the database, %s", token)
 
-		res := Response{
+		res := TokenResponse{
 			Status:        "CREATED",
 			StatusCode:    201,
 			StatusMessage: "Successfully generated access token",

@@ -51,16 +51,29 @@ func Get(srv webserver.Server) http.HandlerFunc {
 			// Get the user from the userID
 			user, err := srv.GetUser(userID)
 			if err != nil {
-				sublogger.Info().Msg("[GET /users/{userID}] User does not exist")
+				if err.Error() == "user not found" {
+					sublogger.Info().Msg("[GET /users/{userID}] User does not exist")
 
-				res := Response{
-					Status:        "NOT FOUND",
-					StatusCode:    404,
-					StatusMessage: "User does not exist",
+					res := Response{
+						Status:        "NOT FOUND",
+						StatusCode:    404,
+						StatusMessage: "User does not exist",
+					}
+					w.WriteHeader(http.StatusNotFound)
+					json.NewEncoder(w).Encode(&res)
+					return
+				} else {
+					sublogger.Info().Msgf("[GET /users/{userID}] Error getting user from the database, %s", err.Error())
+
+					res := Response{
+						Status:        "INTERNAL SERVER ERROR",
+						StatusCode:    500,
+						StatusMessage: "Error retrieving user",
+					}
+					w.WriteHeader(http.StatusInternalServerError)
+					json.NewEncoder(w).Encode(&res)
+					return
 				}
-				w.WriteHeader(http.StatusNotFound)
-				json.NewEncoder(w).Encode(&res)
-				return
 			}
 
 			sublogger.Info().Msgf("[GET /users/{userID}] Successfully retrieved user: %+v", user)

@@ -23,6 +23,7 @@ func BuildPipeline(srv webserver.Server, r *mux.Router) {
 	r.HandleFunc("/auth/signin", signin.Post(srv)).Methods(http.MethodPost)
 
 	r.HandleFunc("/auth/tokens/access", accessToken.Post(srv)).Methods(http.MethodPost)
+	r.HandleFunc("/auth/tokens/access/{token}", accessToken.Delete(srv)).Methods(http.MethodDelete)
 
 	r.HandleFunc("/users/{userID}", users.Get(srv)).Methods(http.MethodGet)
 	r.HandleFunc("/users", users.Post(srv)).Methods(http.MethodPost)

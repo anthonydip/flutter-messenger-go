@@ -11,6 +11,8 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/api/iterator"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (bkr Broker) GetUser(id string) (dtos.User, error) {
@@ -18,7 +20,10 @@ func (bkr Broker) GetUser(id string) (dtos.User, error) {
 
 	dsnap, err := bkr.Firestore.Collection("users").Doc(id).Get(context.Background())
 	if err != nil {
-		return dtos.User{}, fmt.Errorf("user not found")
+		if status.Code(err) == codes.NotFound {
+			return dtos.User{}, fmt.Errorf("user not found")
+		}
+		return dtos.User{}, err
 	}
 
 	mapstructure.Decode(dsnap.Data(), &user)

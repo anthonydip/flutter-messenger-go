@@ -7,11 +7,12 @@ import (
 type Result func(c *mockConfig)
 
 type mockConfig struct {
-	getUser        error
-	getUserByEmail error
-	signIn         error
-	postUser       error
-	addAccessToken error
+	getUser           error
+	getUserByEmail    error
+	signIn            error
+	postUser          error
+	addAccessToken    error
+	deleteAccessToken error
 }
 
 // Mock for mocking Storefront service
@@ -125,4 +126,25 @@ func AddAccessTokenResult(e error) Result {
 	return func(c *mockConfig) {
 		c.addAccessToken = e
 	}
+}
+
+// DeleteAccessToken mocks Storefront DeleteAccessToken() call
+func (m Mock) DeleteAccessToken(string) error {
+	if m.cfg.deleteAccessToken != nil {
+		return m.cfg.deleteAccessToken
+	}
+
+	return nil
+}
+
+// DeleteAccessTokenResult sets the result of the mock DeleteAccessToken()
+func DeleteAccessTokenResult(e error) Result {
+	return func(c *mockConfig) {
+		c.deleteAccessToken = e
+	}
+}
+
+// TODO
+func (m Mock) AccessTokenExists(string) error {
+	return nil
 }
