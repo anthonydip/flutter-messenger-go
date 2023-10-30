@@ -121,32 +121,6 @@ func Post(srv webserver.Server) http.HandlerFunc {
 			return
 		}
 
-		// Generate access token for the user
-		token, err := srv.GenerateAccessToken(user)
-		if err != nil {
-			switch err.Error() {
-			case "error reading file":
-				sublogger.Error().Msg("[POST /auth/signin] Error reading private key")
-			case "error parsing pem":
-				sublogger.Error().Msg("[POST /auth/signin] Error parsing PEM file")
-			case "error signing token":
-				sublogger.Error().Msg("[POST /auth/signin] Error signing token")
-			default:
-				sublogger.Error().Msg("[POST /auth/signin] Unexpected error occurred generating user access token")
-			}
-
-			res := Response{
-				Status:        "INTERNAL SERVER ERROR",
-				StatusCode:    500,
-				StatusMessage: "Error generating access token",
-			}
-
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(&res)
-			return
-		}
-		sublogger.Info().Msgf("[POST /auth/signin] Successfully generated user access token %s", token)
-
 		// Get the full user info
 		userInfo, err := srv.GetUserByEmail(user.Email)
 		if err != nil {
@@ -172,6 +146,32 @@ func Post(srv webserver.Server) http.HandlerFunc {
 				return
 			}
 		}
+
+		// Generate access token for the user
+		token, err := srv.GenerateAccessToken(userInfo)
+		if err != nil {
+			switch err.Error() {
+			case "error reading file":
+				sublogger.Error().Msg("[POST /auth/signin] Error reading private key")
+			case "error parsing pem":
+				sublogger.Error().Msg("[POST /auth/signin] Error parsing PEM file")
+			case "error signing token":
+				sublogger.Error().Msg("[POST /auth/signin] Error signing token")
+			default:
+				sublogger.Error().Msg("[POST /auth/signin] Unexpected error occurred generating user access token")
+			}
+
+			res := Response{
+				Status:        "INTERNAL SERVER ERROR",
+				StatusCode:    500,
+				StatusMessage: "Error generating access token",
+			}
+
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(&res)
+			return
+		}
+		sublogger.Info().Msgf("[POST /auth/signin] Successfully generated user access token %s", token)
 
 		// Add the access token to the database
 		err = srv.AddAccessToken(token, userInfo)
