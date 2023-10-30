@@ -51,7 +51,7 @@ func Post(srv webserver.Server) http.HandlerFunc {
 
 		log.Info().Msgf("[POST /auth/signin] Received a request, %+v", user)
 
-		sublogger := log.With().Any("request", user).Logger()
+		sublogger := log.With().Any("request", user.String()).Logger()
 
 		// Validate user sign in request
 		err = utils.ValidatePostUser(user)
@@ -145,6 +145,50 @@ func Post(srv webserver.Server) http.HandlerFunc {
 			json.NewEncoder(w).Encode(&res)
 			return
 		}
+		sublogger.Info().Msgf("[POST /auth/signin] Successfully generated user access token %s", token)
+
+		// Get the full user info
+		userInfo, err := srv.GetUserByEmail(user.Email)
+		if err != nil {
+			if err.Error() == "user does not exist" {
+				res := Response{
+					Status:        "NOT FOUND",
+					StatusCode:    404,
+					StatusMessage: "User does not exist",
+				}
+
+				w.WriteHeader(http.StatusNotFound)
+				json.NewEncoder(w).Encode(&res)
+				return
+			} else {
+				res := Response{
+					Status:        "INTERNAL SERVER ERROR",
+					StatusCode:    500,
+					StatusMessage: "Error retrieving user information",
+				}
+
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(&res)
+				return
+			}
+		}
+
+		// Add the access token to the database
+		err = srv.AddAccessToken(token, userInfo)
+		if err != nil {
+			log.Error().Msg("[POST /auth/signin] Error adding access token to the database")
+
+			res := Response{
+				Status:        "INTERNAL SERVER ERROR",
+				StatusCode:    500,
+				StatusMessage: "Error generating access token",
+			}
+
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(&res)
+			return
+		}
+		sublogger.Info().Msgf("[POST /auth/signin] Successfully added user access token %s to the database", token)
 
 		sublogger.Info().Msgf("[POST /auth/signin] Successfully signed user in with access token %s", token)
 
