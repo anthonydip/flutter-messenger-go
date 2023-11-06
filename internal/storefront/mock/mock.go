@@ -153,3 +153,8 @@ func (m Mock) AccessTokenExists(string) error {
 func (m Mock) PostFriend(string, dtos.User) error {
 	return nil
 }
+
+// TODO
+func (m Mock) GetAllFriends(string) ([]dtos.Friend, error) {
+	return make([]dtos.Friend, 0), nil
+}

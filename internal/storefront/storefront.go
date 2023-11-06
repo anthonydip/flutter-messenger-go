@@ -12,6 +12,7 @@ import (
 type Storefront interface {
 	GetUser(string) (dtos.User, error)
 	GetUserByEmail(string) (dtos.User, error)
+	GetAllFriends(string) ([]dtos.Friend, error)
 	SignIn(dtos.User) error
 	PostUser(dtos.User) (dtos.User, error)
 	PostFriend(string, dtos.User) error

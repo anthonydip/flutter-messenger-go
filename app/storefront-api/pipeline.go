@@ -26,7 +26,8 @@ func BuildPipeline(srv webserver.Server, r *mux.Router) {
 	r.HandleFunc("/auth/tokens/access", accessToken.Post(srv)).Methods(http.MethodPost)
 	r.HandleFunc("/auth/tokens/access/{token}", accessToken.Delete(srv)).Methods(http.MethodDelete)
 
-	r.HandleFunc("/users/{userID}", users.Get(srv)).Methods(http.MethodGet)
+	r.HandleFunc("/users/{id:(?:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}|[^@]+@[^/]+)}", users.Get(srv)).Methods(http.MethodGet)
 	r.HandleFunc("/users", users.Post(srv)).Methods(http.MethodPost)
 	r.HandleFunc("/users/friends", friends.Post(srv)).Methods(http.MethodPost)
+	r.HandleFunc("/users/friends", friends.Get(srv)).Methods(http.MethodGet)
 }

@@ -163,15 +163,27 @@ func Post(srv webserver.Server) http.HandlerFunc {
 		// Attempt to add the friend
 		err = srv.PostFriend(user.Id, friendUser)
 		if err != nil {
-			sublogger.Error().Msgf("[POST /users/friends] Error adding friend, %s", err.Error())
-			res := FriendResponse{
-				Status:        "INTERNAL SERVER ERROR",
-				StatusCode:    500,
-				StatusMessage: "Error adding friend",
+			if err.Error() == "friend already added" {
+				sublogger.Error().Msgf("[POST /users/friends] Friend already added")
+				res := FriendResponse{
+					Status:        "CONFLICT",
+					StatusCode:    409,
+					StatusMessage: "Friend already added",
+				}
+				w.WriteHeader(http.StatusConflict)
+				json.NewEncoder(w).Encode(&res)
+				return
+			} else {
+				sublogger.Error().Msgf("[POST /users/friends] Error adding friend, %s", err.Error())
+				res := FriendResponse{
+					Status:        "INTERNAL SERVER ERROR",
+					StatusCode:    500,
+					StatusMessage: "Error adding friend",
+				}
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(&res)
+				return
 			}
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(&res)
-			return
 		}
 
 		sublogger.Info().Msgf("[POST /users/friends] Successfully added friend")

@@ -121,10 +121,13 @@ func Post(srv webserver.Server) http.HandlerFunc {
 			return
 		}
 
+		sublogger.Info().Msgf("[POST /auth/signin] Validated user password")
+
 		// Get the full user info
 		userInfo, err := srv.GetUserByEmail(user.Email)
 		if err != nil {
 			if err.Error() == "user does not exist" {
+				sublogger.Error().Msgf("[POST /auth/signin] User information does not exist")
 				res := Response{
 					Status:        "NOT FOUND",
 					StatusCode:    404,
@@ -135,6 +138,7 @@ func Post(srv webserver.Server) http.HandlerFunc {
 				json.NewEncoder(w).Encode(&res)
 				return
 			} else {
+				sublogger.Error().Msgf("[POST /auth/signin] Error retrieving user information")
 				res := Response{
 					Status:        "INTERNAL SERVER ERROR",
 					StatusCode:    500,
@@ -146,6 +150,25 @@ func Post(srv webserver.Server) http.HandlerFunc {
 				return
 			}
 		}
+
+		sublogger.Info().Msgf("[POST /auth/signin] Retrieved user information from database")
+
+		// Get user friends
+		// friendsList, err := srv.GetAllFriends(userInfo.Id)
+		// if err != nil {
+		// 	sublogger.Error().Msgf("[POST /auth/signin] Error retrieving user friends list")
+		// 	res := Response{
+		// 		Status:        "INTERNAL SERVER ERROR",
+		// 		StatusCode:    500,
+		// 		StatusMessage: "Error retrieving user friends list",
+		// 	}
+
+		// 	w.WriteHeader(http.StatusInternalServerError)
+		// 	json.NewEncoder(w).Encode(&res)
+		// 	return
+		// }
+
+		// sublogger.Info().Msgf("[POST /auth/signin] Retrieved user friends list")
 
 		// Generate access token for the user
 		token, err := srv.GenerateAccessToken(userInfo)

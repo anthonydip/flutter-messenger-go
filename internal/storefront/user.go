@@ -63,6 +63,32 @@ func (bkr Broker) GetUserByEmail(email string) (dtos.User, error) {
 	return user, nil
 }
 
+func (bkr Broker) GetAllFriends(id string) ([]dtos.Friend, error) {
+	friends := make([]dtos.Friend, 0)
+
+	iter := bkr.Firestore.Collection("users").Doc(id).Collection("friends").Documents(context.Background())
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+
+		if err != nil {
+			return make([]dtos.Friend, 0), err
+		}
+
+		// User exists in the database
+		if doc.Data() != nil {
+			friend := dtos.Friend{}
+
+			mapstructure.Decode(doc.Data(), &friend)
+			friends = append(friends, friend)
+		}
+	}
+
+	return friends, nil
+}
+
 // Sign a user in, checking password
 func (bkr Broker) SignIn(userInfo dtos.User) error {
 	user := dtos.User{}
@@ -169,10 +195,23 @@ func (bkr Broker) PostUser(userInfo dtos.User) (dtos.User, error) {
 }
 
 func (bkr Broker) PostFriend(userID string, friend dtos.User) error {
-	_, err := bkr.Firestore.Collection("users").Doc(userID).Collection("friends").Doc(friend.Id).Set(context.Background(), friend)
+	// Check if the friend is already added
+	_, err := bkr.Firestore.Collection("users").Doc(userID).Collection("friends").Doc(friend.Id).Get(context.Background())
+	// Error is expected in this case
 	if err != nil {
-		return err
+		// If friend is not added, add them
+		if status.Code(err) == codes.NotFound {
+			_, err = bkr.Firestore.Collection("users").Doc(userID).Collection("friends").Doc(friend.Id).Set(context.Background(), friend)
+			if err != nil {
+				return err
+			}
+
+			// Friend successfully added
+			return nil
+		} else {
+			return err
+		}
 	}
 
-	return nil
+	return fmt.Errorf("friend already added")
 }
