@@ -160,6 +160,19 @@ func Post(srv webserver.Server) http.HandlerFunc {
 			}
 		}
 
+		// Check if user is attempting to add themself
+		if user.Id == friendUser.Id {
+			sublogger.Error().Msgf("[POST /users/friends] User attempted to add themself as a friend")
+			res := FriendResponse{
+				Status:        "CONFLICT",
+				StatusCode:    409,
+				StatusMessage: "Invalid friend",
+			}
+			w.WriteHeader(http.StatusConflict)
+			json.NewEncoder(w).Encode(&res)
+			return
+		}
+
 		// Attempt to add the friend
 		err = srv.PostFriend(user.Id, friendUser)
 		if err != nil {

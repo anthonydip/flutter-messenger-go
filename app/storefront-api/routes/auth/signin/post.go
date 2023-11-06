@@ -153,23 +153,6 @@ func Post(srv webserver.Server) http.HandlerFunc {
 
 		sublogger.Info().Msgf("[POST /auth/signin] Retrieved user information from database")
 
-		// Get user friends
-		// friendsList, err := srv.GetAllFriends(userInfo.Id)
-		// if err != nil {
-		// 	sublogger.Error().Msgf("[POST /auth/signin] Error retrieving user friends list")
-		// 	res := Response{
-		// 		Status:        "INTERNAL SERVER ERROR",
-		// 		StatusCode:    500,
-		// 		StatusMessage: "Error retrieving user friends list",
-		// 	}
-
-		// 	w.WriteHeader(http.StatusInternalServerError)
-		// 	json.NewEncoder(w).Encode(&res)
-		// 	return
-		// }
-
-		// sublogger.Info().Msgf("[POST /auth/signin] Retrieved user friends list")
-
 		// Generate access token for the user
 		token, err := srv.GenerateAccessToken(userInfo)
 		if err != nil {
