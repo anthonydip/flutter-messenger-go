@@ -10,16 +10,22 @@ import (
 	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/routes/users"
 	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/routes/users/friends"
 	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/webserver"
+	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/ws"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 )
 
 // Build the HTTP pipeline
-func BuildPipeline(srv webserver.Server, r *mux.Router) {
+func BuildPipeline(srv webserver.Server, hub *ws.Hub, r *mux.Router) {
 	log.Info().Msg("building pipeline...")
 	r.HandleFunc("/ping", routes.Ping(srv)).Methods(http.MethodGet)
 
 	r.Use(middleware.Authentication(srv))
+
+	r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		log.Info().Msgf("[GET /ws] Established WebSocket connection for %s", r.URL.Query().Get("token"))
+		ws.ServeWs(hub, w, r)
+	})
 
 	r.HandleFunc("/auth/signin", signin.Post(srv)).Methods(http.MethodPost)
 

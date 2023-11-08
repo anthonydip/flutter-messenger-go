@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/anthonydip/flutter-messenger-go/app/storefront-api/ws"
 	"github.com/anthonydip/flutter-messenger-go/internal/storefront"
 	"github.com/anthonydip/flutter-messenger-go/pkg/authentication"
 
@@ -54,9 +55,11 @@ func New(cfg Config) (*Broker, error) {
 }
 
 // Start the Storefront service
-func (bkr *Broker) Start(binder func(s Server, r *mux.Router)) {
+func (bkr *Broker) Start(binder func(s Server, h *ws.Hub, r *mux.Router)) {
+	hub := ws.NewHub()
+	go hub.Run()
 	bkr.router = mux.NewRouter().StrictSlash(true)
-	binder(bkr, bkr.router)
+	binder(bkr, hub, bkr.router)
 
 	l, err := net.Listen("tcp", ":"+strconv.Itoa(bkr.cfg.Port))
 	if err != nil {

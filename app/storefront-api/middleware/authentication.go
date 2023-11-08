@@ -67,10 +67,23 @@ func Authentication(srv webserver.Server) func(h http.Handler) http.Handler {
 					return
 				}
 			} else {
-				if !srv.ValidateJWT(tokenString) {
-					w.WriteHeader(http.StatusUnauthorized)
-					json.NewEncoder(w).Encode(&res)
-					return
+				// ws route authentication
+				if strings.HasPrefix(r.URL.String(), "/ws") {
+					// Get the token from query parameter
+					authToken := r.URL.Query().Get("token")
+
+					// Validate the auth token
+					if !srv.ValidateJWT(authToken) {
+						w.WriteHeader(http.StatusUnauthorized)
+						json.NewEncoder(w).Encode(&res)
+						return
+					}
+				} else {
+					if !srv.ValidateJWT(tokenString) {
+						w.WriteHeader(http.StatusUnauthorized)
+						json.NewEncoder(w).Encode(&res)
+						return
+					}
 				}
 			}
 
