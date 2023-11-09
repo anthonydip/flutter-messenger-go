@@ -23,8 +23,9 @@ func BuildPipeline(srv webserver.Server, hub *ws.Hub, r *mux.Router) {
 	r.Use(middleware.Authentication(srv))
 
 	r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		log.Info().Msgf("[GET /ws] Established WebSocket connection for %s", r.URL.Query().Get("token"))
-		ws.ServeWs(hub, w, r)
+		user, _ := srv.ValidateParseJWT(r.URL.Query().Get("token"))
+
+		ws.ServeWs(hub, w, r, user.Id)
 	})
 
 	r.HandleFunc("/auth/signin", signin.Post(srv)).Methods(http.MethodPost)

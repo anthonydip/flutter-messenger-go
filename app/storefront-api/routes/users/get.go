@@ -22,7 +22,7 @@ func Get(srv webserver.Server) http.HandlerFunc {
 
 		// Get the userID
 		params := mux.Vars(r)
-		userID := strings.TrimSpace(params["userID"])
+		userID := strings.TrimSpace(params["id"])
 
 		sublogger := log.With().Any("userID", userID).Logger()
 		sublogger.Info().Msg("[GET /users/{userID}] Received a request")

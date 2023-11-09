@@ -2,11 +2,12 @@ package ws
 
 import (
 	"bytes"
-	"log"
+	"encoding/json"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -33,6 +34,12 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+type Response struct {
+	Status        string `json:"status"`
+	StatusCode    int    `json:"statusCode"`
+	StatusMessage string `json:"statusMessage,omitempty"`
+}
+
 // Client is a middleman between the websocket connection and the hub
 type Client struct {
 	hub *Hub
@@ -42,6 +49,9 @@ type Client struct {
 
 	// Buffered channel of outbound messages
 	send chan []byte
+
+	// Hold user ID for the client
+	userId string
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -61,7 +71,7 @@ func (c *Client) ReadPump() {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
+				log.Info().Msgf("[/ws] WebSocket connection closed for %s", c.userId)
 			}
 			break
 		}
@@ -116,20 +126,45 @@ func (c *Client) WritePump() {
 	}
 }
 
-func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request, id string) {
+	if id == "" {
+		log.Error().Msgf("[GET /ws] Invalid user id %s", id)
+		res := Response{
+			Status:        "INTERNAL SERVER ERROR",
+			StatusCode:    500,
+			StatusMessage: "Unable to parse user from token",
+		}
+
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(&res)
+		return
+	}
+
+	// TO-DO: Maybe remove later?
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
 	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		log.Error().Msgf("[GET /ws] Error upgrading to WebSocket connection for %s", id)
+		res := Response{
+			Status:        "INTERNAL SERVER ERROR",
+			StatusCode:    500,
+			StatusMessage: "Unable to parse user from token",
+		}
+
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(&res)
 		return
 	}
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), userId: id}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines
 	go client.WritePump()
 	go client.ReadPump()
+
+	log.Info().Msgf("[GET /ws] Established WebSocket connection for %s", id)
 }
