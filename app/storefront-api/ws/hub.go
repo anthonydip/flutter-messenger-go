@@ -39,6 +39,7 @@ func (h *Hub) Run() {
 		// When a new client registers with the hub
 		case client := <-h.register:
 			h.clients[client] = true
+			h.userIds[client.userId] = client
 		// When a client requests to unregister (disconnects)
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
@@ -48,31 +49,20 @@ func (h *Hub) Run() {
 		// When a message is broadcasted to all connected clients
 		case message := <-h.broadcast:
 			// Check if the message is a private message
+			// Private message is of the form "/msg <sender id> <recipient id> <message>"
 			if strings.HasPrefix(string(message), "/msg ") {
 				// Extract the user id from the message
-				parts := strings.SplitN(string(message[5:]), " ", 2)
-				targetId := parts[0]
+				parts := strings.SplitN(string(message[5:]), " ", 3)
+				targetId := parts[1]
 
 				// Find the target client and send the private messsage
 				if targetId, ok := h.userIds[targetId]; ok {
 					select {
-					case targetId.send <- []byte(parts[1]):
+					case targetId.send <- []byte(message[5:]):
 					default:
 						close(targetId.send)
 						delete(h.clients, targetId)
 						delete(h.userIds, targetId.userId)
-					}
-				}
-			} else {
-				// Broadcast the message to all clients
-				for client := range h.clients {
-					select {
-					// Send the message to the client's send channel
-					case client.send <- message:
-					default:
-						// If the client's send cannel is full, close the channel
-						close(client.send)
-						delete(h.clients, client)
 					}
 				}
 			}
