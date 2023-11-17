@@ -1,7 +1,9 @@
 package ws
 
 import (
+	"fmt"
 	"strings"
+	"time"
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -49,16 +51,30 @@ func (h *Hub) Run() {
 		// When a message is broadcasted to all connected clients
 		case message := <-h.broadcast:
 			// Check if the message is a private message
-			// Private message is of the form "/msg <sender id> <recipient id> <message>"
+			// Private message is of the form "/msg <sender id> <recipient id> <message> <timestamp>"
 			if strings.HasPrefix(string(message), "/msg ") {
 				// Extract the user id from the message
 				parts := strings.SplitN(string(message[5:]), " ", 3)
 				targetId := parts[1]
 
+				// Create the timestamp for the message
+				currentTime := time.Now()
+				timestamp := fmt.Sprintf("%d-%d-%d %d:%d:%d:%d",
+					currentTime.Year(),
+					currentTime.Month(),
+					currentTime.Day(),
+					currentTime.Hour(),
+					currentTime.Minute(),
+					currentTime.Second(),
+					currentTime.Nanosecond(),
+				)
+
+				newMessage := fmt.Sprintf("%s %s", message, timestamp)
+
 				// Find the target client and send the private messsage
 				if targetId, ok := h.userIds[targetId]; ok {
 					select {
-					case targetId.send <- []byte(message[5:]):
+					case targetId.send <- []byte(newMessage[5:]):
 					default:
 						close(targetId.send)
 						delete(h.clients, targetId)
