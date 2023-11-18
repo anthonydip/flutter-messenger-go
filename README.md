@@ -39,6 +39,8 @@ Simple Messenger Go is a Go-based server designed to power the backend for the "
 ```
 
 - **app/**: Entry point for the Go server and is where the main.go lives. This is were all the HTTP pipeline is built, along with its implementation details. WebSocket management through the client and hub is also done here.
+  - **middleware/**: Holds the middleware functionality for HTTP requests. Verifies user tokens based on the specific route that are attempting to send a request to.
+  - **routes/**: All the route functionality is done here, where the API endpoint structure mirros the directory structure within the routes folder. This mean that accessing specific functionalities within the API corresponds to navigating through the directory hierarchy in the URL path. The folders hold the respectful HTTP methods, and are all built in pipeline.go
 - **internal/**: This is where all the domain logic goes, along with any Firestore data queries.
 - **keys/**: Holds the various private and public keys used to sign, verify and issue JSON Web Tokens.
 - **pkg/**: Holds data transfer objects, which allows structs to be designed for sharing data between packages and encoding/trasmitting over the wire as JSON. Any authentication functions and protocols are handled here as well.
